@@ -1,7 +1,7 @@
 import time
 import sys
 import math
-
+import random
 
 def readVectorsSeq(filename):
     with open(filename) as f:
@@ -18,8 +18,16 @@ def euclidean(point1, point2):
 
 
 if __name__ == '__main__':
+    assert len(sys.argv) == 4, "Usage: python G042Hw2.py <file_name> <k> <z>"
 
-    assert len(sys.argv) == 2, "path to dataset:"
     file_name = sys.argv[1]
-    dataset = readVectorsSeq(file_name)
-    #print(dataset)
+    inputPoints = readVectorsSeq(file_name)
+    weights = [1 for i in range(len(inputPoints))]
+
+    k = sys.argv[2]
+    assert k.isdigit(), "k must be an integer"
+    k = int(k)
+
+    z = sys.argv[3]
+    assert z.isdigit(), "z must be an integer"
+    z = int(z)
