@@ -1,7 +1,5 @@
-import time
 import sys
 import math
-import random
 
 
 def readVectorsSeq(filename):
@@ -21,41 +19,65 @@ def euclidean(point1, point2):
 def minDistance(P, n):
     subset = P[:n]
     min_d = 99999
-    for i in subset:
+    index = 0
+    # i = subset.pop(0)
+    while subset:
+        i = subset.pop()
         for j in subset:
-            current_d = euclidean(i, subset[j])
+            current_d = euclidean(i, j)
+            # print("d between ", i, " and ", j, ": ", current_d)
             if current_d < min_d:
                 min_d = current_d
-    return min_d // 2
+
+    # print(min_d)
+    return min_d / 2
 
 
-def pointsInRadius(Z, x, r):
+def pointsInRadius(P, w, x, r):
     # returns set of points in radius r from x
     ball = []
-    for i in Z:
-        if euclidean(i, x) < r:
-            ball.append(i)
+    # print("x: ", x)
+    for i in range(len(P)):
+        # print(P[i])
+        if euclidean(P[i], x) < r:
+            # print(euclidean(P[i], x), " is in radius")
+            ball.append(w[i])
     return ball
 
 
-def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
+def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=1):
     # r <- (Min distance between first k+z+1 points) / 2
     r = minDistance(inputPoints, k + z + 1)
-    Z = inputPoints
+    num_iter = 0
+    print("radius: ", r)
     S = []
+    Z = inputPoints
     W_z = sum(weights)
-    while len(S) < k and W_z > 0:
+    while len(S) < k:
         new_center = tuple()
         MAX = 0
-        for x in inputPoints:
+        for x in Z:
             # ball weight is the sum of weights of all point in the radius (1+2*alpha)r
-            W_y = pointsInRadius(Z, x, (1 + 2 * alpha) * r)
+            W_y = pointsInRadius(Z, weights, x, (1 + 2 * alpha) * r)
             ball_weight = sum(W_y)
             if ball_weight > MAX:
                 MAX = ball_weight
                 new_center = x
         S.append(new_center)
-    return S
+
+        for y in Z:
+            if euclidean(y, new_center) < (3 + 4 * alpha) * r:
+                W_z -= weights[Z.index(y)]
+                Z.remove(y)
+
+        if W_z <= z:
+            return S
+        else:
+            r = 2 * r
+            num_iter += 1
+
+    print("S: ", S)
+    return S, r, num_iter
 
 
 if __name__ == '__main__':
@@ -73,4 +95,15 @@ if __name__ == '__main__':
     assert z.isdigit(), "z must be an integer"
     z = int(z)
 
-    SeqWeightedOutliers(inputPoints, weights, k, z)
+    r_init = minDistance(inputPoints, k + z + 1)
+    S, r_fin, num_iter = SeqWeightedOutliers(inputPoints, weights, k, z)
+
+    # OUTPUT
+    print("Input size n =  ", len(inputPoints))
+    print("Number of centers k =  ", k)
+    print("Number of ouliers z =  ", z)
+    print("Initial guess =  ", r_init)
+    print("Final guess =  ", r_fin)
+    print("Number of guesses =  ", num_iter)
+    print("Objective function =  ")
+    print("Time of SeqWeightedOutliers = ")
