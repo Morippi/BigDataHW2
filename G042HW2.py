@@ -1,6 +1,6 @@
 import sys
 import math
-
+import copy
 
 def readVectorsSeq(filename):
     with open(filename) as f:
@@ -28,7 +28,6 @@ def minDistance(P, n):
             # print("d between ", i, " and ", j, ": ", current_d)
             if current_d < min_d:
                 min_d = current_d
-
     # print(min_d)
     return min_d / 2
 
@@ -45,34 +44,38 @@ def pointsInRadius(P, w, x, r):
     return ball
 
 
-def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=1):
+def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
     # r <- (Min distance between first k+z+1 points) / 2
     r = minDistance(inputPoints, k + z + 1)
     num_iter = 0
-    print("radius: ", r)
-    S = []
-    Z = inputPoints
-    W_z = sum(weights)
-    while len(S) < k:
-        new_center = tuple()
-        MAX = 0
-        for x in Z:
-            # ball weight is the sum of weights of all point in the radius (1+2*alpha)r
-            W_y = pointsInRadius(Z, weights, x, (1 + 2 * alpha) * r)
-            ball_weight = sum(W_y)
-            if ball_weight > MAX:
-                MAX = ball_weight
-                new_center = x
-        S.append(new_center)
-
-        for y in Z:
-            if euclidean(y, new_center) < (3 + 4 * alpha) * r:
-                W_z -= weights[Z.index(y)]
-                Z.remove(y)
-
+    while True:
+        Z = copy.deepcopy(inputPoints)
+        W_z_array = copy.deepcopy(weights)
+        S = []
+        W_z = sum(weights)
+        while len(S) < k and W_z > 0:
+            MAX = 0
+            new_center = tuple()
+            for x in inputPoints:
+                # ball weight is the sum of weights of all point in the radius (1+2*alpha)r
+                W_y = pointsInRadius(inputPoints, weights, x, (1 + 2 * alpha) * r)
+                ball_weight = sum(W_y)
+                if ball_weight > MAX:
+                    #print("if")
+                    MAX = ball_weight
+                    new_center = x
+            S.append(new_center)
+            #print(new_center)
+            for y in Z:
+                if euclidean(y, new_center) < (3 + 4 * alpha) * r:
+                    W_z -= W_z_array[W_z_array.index(y)]
+                    W_z_array.remove(y)
+                   # print(W_z)
+                    Z.remove(y)
         if W_z <= z:
-            return S
+            break
         else:
+           # print(W_z, "change r")
             r = 2 * r
             num_iter += 1
 
