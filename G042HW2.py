@@ -50,7 +50,6 @@ def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
     num_iter = 0
     while True:
         Z = copy.deepcopy(inputPoints)
-        W_z_array = copy.deepcopy(weights)
         S = []
         W_z = sum(weights)
         while len(S) < k and W_z > 0:
@@ -61,21 +60,22 @@ def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
                 W_y = pointsInRadius(inputPoints, weights, x, (1 + 2 * alpha) * r)
                 ball_weight = sum(W_y)
                 if ball_weight > MAX:
-                    #print("if")
                     MAX = ball_weight
                     new_center = x
             S.append(new_center)
-            #print(new_center)
             for y in Z:
                 if euclidean(y, new_center) < (3 + 4 * alpha) * r:
-                    W_z -= W_z_array[W_z_array.index(y)]
-                    W_z_array.remove(y)
+                    W_z -= 1
                    # print(W_z)
                     Z.remove(y)
+        print(S)
+        print(W_z)
         if W_z <= z:
+            print(W_z, "stop")
+
             break
         else:
-           # print(W_z, "change r")
+            print(W_z, "change r")
             r = 2 * r
             num_iter += 1
 
