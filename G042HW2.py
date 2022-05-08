@@ -19,8 +19,6 @@ def euclidean(point1, point2):
 def minDistance(P, n):
     subset = P[:n]
     min_d = 99999
-    index = 0
-    # i = subset.pop(0)
     while subset:
         i = subset.pop()
         for j in subset:
@@ -41,7 +39,7 @@ def pointsInRadius(P, w, x, r):
         if euclidean(P[i], x) < r:
             # print(euclidean(P[i], x), " is in radius")
             ball.append(w[i])
-    return ball
+    return sum(ball)
 
 
 def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
@@ -55,27 +53,21 @@ def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
         while len(S) < k and W_z > 0:
             MAX = 0
             new_center = tuple()
-            for x in inputPoints:
+            for x in Z:
                 # ball weight is the sum of weights of all point in the radius (1+2*alpha)r
-                W_y = pointsInRadius(inputPoints, weights, x, (1 + 2 * alpha) * r)
-                ball_weight = sum(W_y)
+                ball_weight = pointsInRadius(inputPoints, weights, x, (1 + 2 * alpha) * r)
                 if ball_weight > MAX:
                     MAX = ball_weight
                     new_center = x
             S.append(new_center)
+            print(S)
             for y in Z:
                 if euclidean(y, new_center) < (3 + 4 * alpha) * r:
                     W_z -= 1
-                   # print(W_z)
                     Z.remove(y)
-        print(S)
-        print(W_z)
         if W_z <= z:
-            print(W_z, "stop")
-
             break
         else:
-            print(W_z, "change r")
             r = 2 * r
             num_iter += 1
 
