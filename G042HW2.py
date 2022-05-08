@@ -83,6 +83,46 @@ def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
     return S, r, num_iter
 
 
+def ComputeObjective(P, S, z):
+    # At first we compute for each point the closest center.
+    # for each point we save:
+    # - the distance to the closest center
+    # - the center
+    distances = []
+    total_distance = 0
+    for point in P:
+        distance = 0
+        closest_center = None
+        for center in S:
+            distance = euclidian(point, center)
+            if min_distance > distance:
+                min_distance = distance
+                closest_center = center
+        distances.append((min_distances, closest_center))
+
+    # We sort the list on the distances
+    distances = sorted(distances, key=lambda couple: couple[0])
+
+    # We pop the list z times to remove the top z distances
+    for i in range(z):
+        distances.pop()
+
+    # We save for each center the maximum distance
+    max_distances = {}
+    for center in S:
+        max_distances[center] = 0
+
+    for distance, center in distances:
+        max_distances[center] = max(max_distances[center], distance)
+
+    # The sum of the maximum distances between the center of a cluster and the point
+    # in the same cluster is the objective value
+    objective_value = 0
+    for center in max_distances.keys:
+        objective_value += max_distances[center]
+
+    return objective_value
+
 if __name__ == '__main__':
     assert len(sys.argv) == 4, "Usage: python G042Hw2.py <file_name> <k> <z>"
 
