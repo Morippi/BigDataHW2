@@ -75,7 +75,7 @@ def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
 
 
 
-            for point_to_remove in points_to_remove:
+            for point_to_remove in range(len(points_to_remove)):
                 inputPoints.pop(point_to_remove)
 
         if W_z <= z:
