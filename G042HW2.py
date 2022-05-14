@@ -23,17 +23,9 @@ def minDistance(P, EuclidianDistance, n):
     while subset:
         i = subset.pop()
         for j in subset:
-            point1 = str(i)
-            point2 = str(j)
-            '''for k in i:
-                point1 += str(k)
-            for h in j:
-                point2 += str(h)'''
 
-            if point1<point2:
-                current_d = EuclidianDistance[(point1, point2)]
-            else:
-                current_d = EuclidianDistance[(point2, point1)]
+            current_d = EuclidianDistance[str(i) +str(j)]
+
 
             # print("d between ", i, " and ", j, ": ", current_d)
             if current_d < min_d:
@@ -48,20 +40,11 @@ def pointsInRadius(P, EuclidianDistance, w, x, r):
     # print("x: ", x)
     for point in P:
         # print(P[i])
-        point1 = str(x)
-        point2 = str(point)
-        '''for k in x:
-            point1 += str(k)
-        for h in point:
-            point2 += str(h)'''
-        if not(point1 == point2):
-            if point1<point2:
-                dist=EuclidianDistance[(point1,point2)]
-            else:
-                dist = EuclidianDistance[(point2,point1)]
 
-        else:
-            dist=0
+        dist=EuclidianDistance[str(x)+str(point)]
+
+
+
 
         if dist < r:
             # print(euclidean(P[i], x), " is in radius")
@@ -100,7 +83,7 @@ def SeqWeightedOutliers(inputPoints,EuclidianDistance, weights, k, z, alpha=0):
             start_time = perf_counter()
             points_to_remove = []
             for y in Z:
-                if euclidean(y, new_center) < (3 + 4 * alpha) * r:
+                if EuclidianDistance[str(y)+str(new_center)] < (3 + 4 * alpha) * r:
                     W_z -= Z[y]
                     points_to_remove.append(y)
             end_time = perf_counter()
@@ -124,21 +107,14 @@ def SeqWeightedOutliers(inputPoints,EuclidianDistance, weights, k, z, alpha=0):
 
 def PrecompileDistance(inputPoints):
     dict={}
-    data=copy.deepcopy(inputPoints)
-    while data:
-        i=data.pop()
+    data=inputPoints
+    for i in data:
         for j in data:
-            point1 = str(i)
-            point2 = str(j)
-            '''for k in i:
-                point1+=str(k)
-            for h in j:
-                point2+=str(h)'''
+            d=euclidean(i, j)
+            dict[str(i)+str(j)] = d
+            dict[str(j)+str(i)] = d
 
-            if point1 < point2:
-                dict[(point1,point2)] = euclidean(i, j)
-            else:
-                dict[(point2,point1)] = euclidean(i, j)
+
     return dict
 
                 
