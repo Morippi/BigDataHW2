@@ -42,33 +42,41 @@ def pointsInRadius(P, w, x, r):
     return ball_weight
 
 
-def SeqWeightedOutliers(inputPoints1, weights, k, z, alpha=0):
+def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
     # r <- (Min distance between first k+z+1 points) / 2
-    r = minDistance(inputPoints1, k + z + 1)
+    r = minDistance(inputPoints, k + z + 1)
+
     num_iter = 1
     while True:
+
 
         S = []
         W_z = sum(weights)
         while len(S) < k and W_z > 0:
             MAX = 0
+
+
+
             for x in inputPoints:
+
                 # ball weight is the sum of weights of all point in the radius (1+2*alpha)r
                 ball_weight = pointsInRadius(inputPoints, weights, x, (1 + 2 * alpha) * r)
                 if ball_weight > MAX:
                     MAX = ball_weight
                     new_center = x
             S.append(new_center)
+
+
             points_to_remove = []
             for y in range(len(inputPoints)):
                 if np.linalg.norm(y - new_center) < (3 + 4 * alpha) * r:
                     W_z -= weights[y]
                     points_to_remove.append(y)
+
+
+
             for point_to_remove in range(len(points_to_remove)):
                 np.delete(inputPoints, point_to_remove, 0)
-                del weights[point_to_remove]
-
-
 
         if W_z <= z:
             break
