@@ -1,5 +1,6 @@
 import sys
 import math
+import copy
 from time import perf_counter
 
 def readVectorsSeq(filename):
@@ -16,13 +17,24 @@ def euclidean(point1, point2):
     return math.sqrt(res)
 
 
-def minDistance(P, n):
+def minDistance(P, EuclidianDistance, n):
     subset = P[:n]
-    min_d = 99999
+    min_d = math.inf
     while subset:
         i = subset.pop()
         for j in subset:
-            current_d = euclidean(i, j)
+            point1 = str(i)
+            point2 = str(j)
+            '''for k in i:
+                point1 += str(k)
+            for h in j:
+                point2 += str(h)'''
+
+            if point1<point2:
+                current_d = EuclidianDistance[(point1, point2)]
+            else:
+                current_d = EuclidianDistance[(point2, point1)]
+
             # print("d between ", i, " and ", j, ": ", current_d)
             if current_d < min_d:
                 min_d = current_d
@@ -30,21 +42,36 @@ def minDistance(P, n):
     return min_d / 2
 
 
-def pointsInRadius(P, w, x, r):
+def pointsInRadius(P, EuclidianDistance, w, x, r):
     # returns set of points in radius r from x
     ball_weight = 0
     # print("x: ", x)
     for point in P:
         # print(P[i])
-        if euclidean(point, x) < r:
+        point1 = str(x)
+        point2 = str(point)
+        '''for k in x:
+            point1 += str(k)
+        for h in point:
+            point2 += str(h)'''
+        if not(point1 == point2):
+            if point1<point2:
+                dist=EuclidianDistance[(point1,point2)]
+            else:
+                dist = EuclidianDistance[(point2,point1)]
+
+        else:
+            dist=0
+
+        if dist < r:
             # print(euclidean(P[i], x), " is in radius")
             ball_weight += P[point]
     return ball_weight
 
 
-def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
+def SeqWeightedOutliers(inputPoints,EuclidianDistance, weights, k, z, alpha=0):
     # r <- (Min distance between first k+z+1 points) / 2
-    r = minDistance(inputPoints, k + z + 1)
+    r = minDistance(inputPoints,EuclidianDistance, k + z + 1)
 
     bad1 = 0
     bad2 = 0
@@ -63,7 +90,7 @@ def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
             start_time = perf_counter()
             for x in Z:
                 # ball weight is the sum of weights of all point in the radius (1+2*alpha)r
-                ball_weight = pointsInRadius(Z, weights, x, (1 + 2 * alpha) * r)
+                ball_weight = pointsInRadius(Z, EuclidianDistance, weights, x, (1 + 2 * alpha) * r)
                 if ball_weight > MAX:
                     MAX = ball_weight
                     new_center = x
@@ -93,6 +120,33 @@ def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
     print(bad2)
     print(bad3)
     return S, r, num_iter
+
+
+def PrecompileDistance(inputPoints):
+    dict={}
+    data=copy.deepcopy(inputPoints)
+    while data:
+        i=data.pop()
+        for j in data:
+            point1 = str(i)
+            point2 = str(j)
+            '''for k in i:
+                point1+=str(k)
+            for h in j:
+                point2+=str(h)'''
+
+            if point1 < point2:
+                dict[(point1,point2)] = euclidean(i, j)
+            else:
+                dict[(point2,point1)] = euclidean(i, j)
+    return dict
+
+                
+                
+                
+
+
+
 
 
 def ComputeObjective(P, S, z):
@@ -148,10 +202,12 @@ if __name__ == '__main__':
     z = sys.argv[3]
     assert z.isdigit(), "z must be an integer"
     z = int(z)
-
-    r_init = minDistance(inputPoints, k + z + 1)
+    EuclidianDistance = PrecompileDistance(inputPoints)
+    r_init = minDistance(inputPoints,EuclidianDistance, k + z + 1)
     start_time = perf_counter()
-    S, r_fin, num_iter = SeqWeightedOutliers(inputPoints, weights, k, z)
+    
+
+    S, r_fin, num_iter = SeqWeightedOutliers(inputPoints , EuclidianDistance, weights, k, z)
     end_time = perf_counter()
     time = int((end_time - start_time)*1000)
 
