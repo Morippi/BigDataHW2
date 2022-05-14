@@ -1,6 +1,5 @@
 import sys
 import math
-import numpy as np
 from time import perf_counter
 
 def readVectorsSeq(filename):
@@ -18,13 +17,14 @@ def euclidean(point1, point2):
 
 
 def minDistance(P, n):
-
+    subset = P[:n]
     min_d = 99999
-    for i in P:
-        for j in P:
-            current_d = np.linalg.norm(i-j)
+    while subset:
+        i = subset.pop()
+        for j in subset:
+            current_d = euclidean(i, j)
             # print("d between ", i, " and ", j, ": ", current_d)
-            if current_d < min_d and current_d:
+            if current_d < min_d:
                 min_d = current_d
     # print(min_d)
     return min_d / 2
@@ -34,11 +34,11 @@ def pointsInRadius(P, w, x, r):
     # returns set of points in radius r from x
     ball_weight = 0
     # print("x: ", x)
-    for point in range(len(P)):
+    for point in P:
         # print(P[i])
-        if np.linalg.norm(P[point]-x) < r:
+        if euclidean(point, x) < r:
             # print(euclidean(P[i], x), " is in radius")
-            ball_weight += w[point]
+            ball_weight += P[point]
     return ball_weight
 
 
@@ -46,45 +46,52 @@ def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
     # r <- (Min distance between first k+z+1 points) / 2
     r = minDistance(inputPoints, k + z + 1)
 
+    bad1 = 0
+    bad2 = 0
+    bad3 = 0
     num_iter = 1
     while True:
-
-
+        Z = {}
+        for i in range(len(inputPoints)):
+            Z[inputPoints[i]] = weights[i]
         S = []
         W_z = sum(weights)
         while len(S) < k and W_z > 0:
             MAX = 0
+            new_center = tuple()
 
-
-
-            for x in inputPoints:
-
+            start_time = perf_counter()
+            for x in Z:
                 # ball weight is the sum of weights of all point in the radius (1+2*alpha)r
-                ball_weight = pointsInRadius(inputPoints, weights, x, (1 + 2 * alpha) * r)
+                ball_weight = pointsInRadius(Z, weights, x, (1 + 2 * alpha) * r)
                 if ball_weight > MAX:
                     MAX = ball_weight
                     new_center = x
             S.append(new_center)
-
-
+            end_time = perf_counter()
+            bad1 += end_time - start_time
+            start_time = perf_counter()
             points_to_remove = []
-            for y in range(len(inputPoints)):
-                if np.linalg.norm(y - new_center) < (3 + 4 * alpha) * r:
-                    W_z -= weights[y]
+            for y in Z:
+                if euclidean(y, new_center) < (3 + 4 * alpha) * r:
+                    W_z -= Z[y]
                     points_to_remove.append(y)
-
-
-
+            end_time = perf_counter()
+            bad2 += end_time - start_time
+            start_time = perf_counter()
             for point_to_remove in points_to_remove:
-                inputPoints.pop(point_to_remove)
-
+                del Z[point_to_remove]
+            end_time = perf_counter()
+            bad3 += end_time - start_time
         if W_z <= z:
             break
         else:
             r = 2 * r
             num_iter += 1
         print(num_iter, W_z, z)
-
+    print(bad1)
+    print(bad2)
+    print(bad3)
     return S, r, num_iter
 
 
@@ -131,8 +138,7 @@ if __name__ == '__main__':
     assert len(sys.argv) == 4, "Usage: python G042Hw2.py <file_name> <k> <z>"
 
     file_name = sys.argv[1]
-    inputPoints = np.loadtxt(file_name, dtype=float, delimiter=',')
-    print(inputPoints)
+    inputPoints = readVectorsSeq(file_name)
     weights = [1 for i in range(len(inputPoints))]
 
     k = sys.argv[2]
