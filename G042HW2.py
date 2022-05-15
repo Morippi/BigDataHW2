@@ -41,7 +41,7 @@ def pointsInRadius(P, EuclidianDistance, w, x, r):
     for point in P:
         # print(P[i])
 
-        dist=EuclidianDistance[str(x)+str(point)]
+        dist=EuclidianDistance[str(x),str(point)]
 
 
 
@@ -107,15 +107,15 @@ def SeqWeightedOutliers(inputPoints,EuclidianDistance, weights, k, z, alpha=0):
 
 def PrecompileDistance(inputPoints):
     dict={}
-    data=inputPoints
+    data=copy.deepcopy(inputPoints)
     for i in data:
-        dict[(str(i) ,str(i))] = 0
-
-    i=data.pop()
-    for j in data:
-        d=euclidean(i, j)
-        dict[(str(i),str(j))] = d
-        dict[(str(j),str(i))] = d
+        dict[(str(i),str(i))] = 0
+    while(data):
+        i=data.pop()
+        for j in data:
+            d=euclidean(i, j)
+            dict[(str(i),str(j))] = d
+            dict[(str(j),str(i))] = d
 
 
 
@@ -183,6 +183,7 @@ if __name__ == '__main__':
     assert z.isdigit(), "z must be an integer"
     z = int(z)
     EuclidianDistance = PrecompileDistance(inputPoints)
+
     r_init = minDistance(inputPoints,EuclidianDistance, k + z + 1)
     start_time = perf_counter()
     
