@@ -82,8 +82,10 @@ def SeqWeightedOutliers(inputPoints,EuclidianDistance, weights, k, z, alpha=0):
             bad1 += end_time - start_time
             start_time = perf_counter()
             points_to_remove = []
+            w=(3 + 4 * alpha) * r
             for y in Z:
-                if EuclidianDistance[(str(y),str(new_center))] < (3 + 4 * alpha) * r:
+
+                if EuclidianDistance[(str(y),str(new_center))] < w :
                     W_z -= Z[y]
                     points_to_remove.append(y)
             end_time = perf_counter()
@@ -107,12 +109,13 @@ def SeqWeightedOutliers(inputPoints,EuclidianDistance, weights, k, z, alpha=0):
 
 def PrecompileDistance(inputPoints):
     dict={}
-    data=copy.deepcopy(inputPoints)
     for i in data:
-        dict[(str(i),str(i))] = 0
-    while(data):
-        i=data.pop()
-        for j in data:
+        dict[(str(i), str(i))] = 0
+
+
+    while(inputPoints):
+        i=inputPoints.pop()
+        for j in inputPoints:
             d=euclidean(i, j)
             dict[(str(i),str(j))] = d
             dict[(str(j),str(i))] = d
@@ -182,7 +185,8 @@ if __name__ == '__main__':
     z = sys.argv[3]
     assert z.isdigit(), "z must be an integer"
     z = int(z)
-    EuclidianDistance = PrecompileDistance(inputPoints)
+    data=inputPoints[:]
+    EuclidianDistance = PrecompileDistance(data)
 
     r_init = minDistance(inputPoints,EuclidianDistance, k + z + 1)
     start_time = perf_counter()
