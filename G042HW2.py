@@ -24,7 +24,7 @@ def minDistance(P, EuclidianDistance, n):
         i = subset.pop()
         for j in subset:
 
-            current_d = EuclidianDistance[str(i) +str(j)]
+            current_d = EuclidianDistance[(str(i),str(j))]
 
 
             # print("d between ", i, " and ", j, ": ", current_d)
@@ -83,7 +83,7 @@ def SeqWeightedOutliers(inputPoints,EuclidianDistance, weights, k, z, alpha=0):
             start_time = perf_counter()
             points_to_remove = []
             for y in Z:
-                if EuclidianDistance[str(y)+str(new_center)] < (3 + 4 * alpha) * r:
+                if EuclidianDistance[(str(y),str(new_center))] < (3 + 4 * alpha) * r:
                     W_z -= Z[y]
                     points_to_remove.append(y)
             end_time = perf_counter()
@@ -109,10 +109,14 @@ def PrecompileDistance(inputPoints):
     dict={}
     data=inputPoints
     for i in data:
-        for j in data:
-            d=euclidean(i, j)
-            dict[str(i)+str(j)] = d
-            dict[str(j)+str(i)] = d
+        dict[(str(i) ,str(i))] = 0
+
+    i=data.pop()
+    for j in data:
+        d=euclidean(i, j)
+        dict[(str(i),str(j))] = d
+        dict[(str(j),str(i))] = d
+
 
 
     return dict
