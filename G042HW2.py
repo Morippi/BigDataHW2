@@ -3,6 +3,7 @@ import math
 import copy
 from time import perf_counter
 
+
 def readVectorsSeq(filename):
     with open(filename) as f:
         result = [tuple(map(float, i.split(','))) for i in f]
@@ -24,8 +25,7 @@ def minDistance(P, EuclidianDistance, n):
         i = subset.pop()
         for j in subset:
 
-            current_d = EuclidianDistance[(i,j)]
-
+            current_d = EuclidianDistance[i][j]
 
             # print("d between ", i, " and ", j, ": ", current_d)
             if current_d < min_d:
@@ -40,19 +40,16 @@ def pointsInRadius(P, EuclidianDistance, w, x, r):
     # print("x: ", x)
     for point in P:
         # print(P[i])
-        if EuclidianDistance[(x,point)] < r:
+        if EuclidianDistance[x][point] < r:
             # print(euclidean(P[i], x), " is in radius")
             ball_weight += P[point]
     return ball_weight
 
 
-def SeqWeightedOutliers(inputPoints,EuclidianDistance, weights, k, z, alpha=0):
+def SeqWeightedOutliers(inputPoints, EuclidianDistance, weights, k, z, alpha=0):
     # r <- (Min distance between first k+z+1 points) / 2
-    r = minDistance(inputPoints,EuclidianDistance, k + z + 1)
+    r = minDistance(inputPoints, EuclidianDistance, k + z + 1)
 
-    bad1 = 0
-    bad2 = 0
-    bad3 = 0
     num_iter = 1
     while True:
         Z = {}
@@ -61,73 +58,51 @@ def SeqWeightedOutliers(inputPoints,EuclidianDistance, weights, k, z, alpha=0):
         S = []
         W_z = sum(weights)
 
-        op=(1 + 2 * alpha) * r
+        op = (1 + 2 * alpha) * r
         while len(S) < k and W_z > 0:
             MAX = 0
             new_center = tuple()
 
-            start_time = perf_counter()
-
-
             for x in Z:
                 # ball weight is the sum of weights of all point in the radius (1+2*alpha)r
+
                 ball_weight = pointsInRadius(Z, EuclidianDistance, weights, x, op)
                 if ball_weight > MAX:
                     MAX = ball_weight
                     new_center = x
             S.append(new_center)
-            end_time = perf_counter()
-            bad1 += end_time - start_time
-            start_time = perf_counter()
             points_to_remove = []
 
             for y in Z:
 
-                if EuclidianDistance[(y,new_center)] < (3 + 4 * alpha) * r :
+                if EuclidianDistance[y][new_center] < (3 + 4 * alpha) * r:
                     W_z -= Z[y]
                     points_to_remove.append(y)
-            end_time = perf_counter()
-            bad2 += end_time - start_time
-            start_time = perf_counter()
+
             for point_to_remove in points_to_remove:
                 del Z[point_to_remove]
-            end_time = perf_counter()
-            bad3 += end_time - start_time
         if W_z <= z:
             break
         else:
             r = 2 * r
             num_iter += 1
-        print(num_iter, W_z, z)
-    print(bad1)
-    print(bad2)
-    print(bad3)
     return S, r, num_iter
 
 
 def PrecompileDistance(inputPoints):
-    dict={}
+    dict = {}
     for i in data:
-        dict[(i,i)] = 0
+        dict[i] = {}
+        dict[i][i] = 0
+    while (inputPoints):
+        i = inputPoints.pop()
 
-
-    while(inputPoints):
-        i=inputPoints.pop()
         for j in inputPoints:
-            d=euclidean(i, j)
-            dict[(i,j)] = d
-            dict[(j,i)] = d
-
-
+            d = euclidean(i, j)
+            dict[i][j] = d
+            dict[j][i] = d
 
     return dict
-
-                
-                
-                
-
-
-
 
 
 def ComputeObjective(P, S, z):
@@ -165,9 +140,10 @@ def ComputeObjective(P, S, z):
     # in the same cluster is the objective value
     objective_value = 0
     for center in max_distances:
-        objective_value = max(objective_value,max_distances[center])
+        objective_value = max(objective_value, max_distances[center])
 
     return objective_value
+
 
 if __name__ == '__main__':
     assert len(sys.argv) == 4, "Usage: python G042Hw2.py <file_name> <k> <z>"
@@ -183,27 +159,17 @@ if __name__ == '__main__':
     z = sys.argv[3]
     assert z.isdigit(), "z must be an integer"
     z = int(z)
-    start_time = perf_counter()
-    data=inputPoints[:]
-    end_time = perf_counter()
-    badCopy = start_time - end_time
 
-    start_time = perf_counter()
+    data = inputPoints[:]
+
     EuclidianDistance = PrecompileDistance(data)
-    end_time = perf_counter()
-    badPre=start_time-end_time
-    r_init = minDistance(inputPoints,EuclidianDistance, k + z + 1)
+    r_init = minDistance(inputPoints, EuclidianDistance, k + z + 1)
 
-    print(badCopy)
-    print(badPre)
     start_time = perf_counter()
 
-
-    
-
-    S, r_fin, num_iter = SeqWeightedOutliers(inputPoints , EuclidianDistance, weights, k, z)
+    S, r_fin, num_iter = SeqWeightedOutliers(inputPoints, EuclidianDistance, weights, k, z)
     end_time = perf_counter()
-    time = int((end_time - start_time)*1000)
+    time = int((end_time - start_time) * 1000)
 
     objective = ComputeObjective(inputPoints, S, z)
     # OUTPUT
