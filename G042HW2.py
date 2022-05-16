@@ -60,14 +60,18 @@ def SeqWeightedOutliers(inputPoints,EuclidianDistance, weights, k, z, alpha=0):
             Z[inputPoints[i]] = weights[i]
         S = []
         W_z = sum(weights)
+
+        op=(1 + 2 * alpha) * r
         while len(S) < k and W_z > 0:
             MAX = 0
             new_center = tuple()
 
             start_time = perf_counter()
+
+
             for x in Z:
                 # ball weight is the sum of weights of all point in the radius (1+2*alpha)r
-                ball_weight = pointsInRadius(Z, EuclidianDistance, weights, x, (1 + 2 * alpha) * r)
+                ball_weight = pointsInRadius(Z, EuclidianDistance, weights, x, op)
                 if ball_weight > MAX:
                     MAX = ball_weight
                     new_center = x
