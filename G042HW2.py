@@ -24,7 +24,7 @@ def minDistance(P, EuclidianDistance, n):
         i = subset.pop()
         for j in subset:
 
-            current_d = EuclidianDistance[(str(i),str(j))]
+            current_d = EuclidianDistance[(i,j)]
 
 
             # print("d between ", i, " and ", j, ": ", current_d)
@@ -40,7 +40,7 @@ def pointsInRadius(P, EuclidianDistance, w, x, r):
     # print("x: ", x)
     for point in P:
         # print(P[i])
-        if EuclidianDistance[str(x),str(point)] < r:
+        if EuclidianDistance[(x,point)] < r:
             # print(euclidean(P[i], x), " is in radius")
             ball_weight += P[point]
     return ball_weight
@@ -83,7 +83,7 @@ def SeqWeightedOutliers(inputPoints,EuclidianDistance, weights, k, z, alpha=0):
 
             for y in Z:
 
-                if EuclidianDistance[(str(y),str(new_center))] < (3 + 4 * alpha) * r :
+                if EuclidianDistance[(y,new_center)] < (3 + 4 * alpha) * r :
                     W_z -= Z[y]
                     points_to_remove.append(y)
             end_time = perf_counter()
@@ -108,15 +108,15 @@ def SeqWeightedOutliers(inputPoints,EuclidianDistance, weights, k, z, alpha=0):
 def PrecompileDistance(inputPoints):
     dict={}
     for i in data:
-        dict[(str(i), str(i))] = 0
+        dict[(i,i)] = 0
 
 
     while(inputPoints):
         i=inputPoints.pop()
         for j in inputPoints:
             d=euclidean(i, j)
-            dict[(str(i),str(j))] = d
-            dict[(str(j),str(i))] = d
+            dict[(i,j)] = d
+            dict[(j,i)] = d
 
 
 
