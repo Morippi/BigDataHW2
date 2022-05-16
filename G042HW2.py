@@ -13,10 +13,13 @@ def readVectorsSeq(filename):
 
 def euclidean(point1, point2):
     res = 0
-    for i in range(len(point1)):
+    dist = [(a - b) ** 2 for a, b in zip(point1, point2)]
+    return math.sqrt(sum(dist))
+
+    '''for i in range(len(point1)):
         diff = (point1[i] - point2[i])
         res += diff * diff
-    return math.sqrt(res)
+    return math.sqrt(res)'''
 
 
 def minDistance(P, n):
