@@ -40,13 +40,7 @@ def pointsInRadius(P, EuclidianDistance, w, x, r):
     # print("x: ", x)
     for point in P:
         # print(P[i])
-
-        dist=EuclidianDistance[str(x),str(point)]
-
-
-
-
-        if dist < r:
+        if EuclidianDistance[str(x),str(point)] < r:
             # print(euclidean(P[i], x), " is in radius")
             ball_weight += P[point]
     return ball_weight
@@ -82,10 +76,10 @@ def SeqWeightedOutliers(inputPoints,EuclidianDistance, weights, k, z, alpha=0):
             bad1 += end_time - start_time
             start_time = perf_counter()
             points_to_remove = []
-            w=(3 + 4 * alpha) * r
+
             for y in Z:
 
-                if EuclidianDistance[(str(y),str(new_center))] < w :
+                if EuclidianDistance[(str(y),str(new_center))] < (3 + 4 * alpha) * r :
                     W_z -= Z[y]
                     points_to_remove.append(y)
             end_time = perf_counter()
@@ -185,11 +179,22 @@ if __name__ == '__main__':
     z = sys.argv[3]
     assert z.isdigit(), "z must be an integer"
     z = int(z)
-    data=inputPoints[:]
-    EuclidianDistance = PrecompileDistance(data)
-
-    r_init = minDistance(inputPoints,EuclidianDistance, k + z + 1)
     start_time = perf_counter()
+    data=inputPoints[:]
+    end_time = perf_counter()
+    badCopy = start_time - end_time
+
+    start_time = perf_counter()
+    EuclidianDistance = PrecompileDistance(data)
+    end_time = perf_counter()
+    badPre=start_time-end_time
+    r_init = minDistance(inputPoints,EuclidianDistance, k + z + 1)
+
+    print(badCopy)
+    print(badPre)
+    start_time = perf_counter()
+
+
     
 
     S, r_fin, num_iter = SeqWeightedOutliers(inputPoints , EuclidianDistance, weights, k, z)
