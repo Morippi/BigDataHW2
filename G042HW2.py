@@ -4,12 +4,13 @@ import copy
 from time import perf_counter
 import numpy as np
 
-
+#Fuction that opens the file and put the data in a list of tuple
 def readVectorsSeq(filename):
     with open(filename) as f:
         result = [tuple(map(float, i.split(','))) for i in f]
     return result
 
+#Fuction of the euclidian distance between two points
 def euclidean(point1, point2):
     res = 0
     for i in range(len(point1)):
@@ -17,16 +18,14 @@ def euclidean(point1, point2):
         res += diff * diff
     return math.sqrt(res)
 
-
+# r <- (min distance between fist k+z+1)/2
 def minDistance(P, n):
     subset = P[:n]
     min_d = math.inf
     while subset:
         i = subset.pop()
         for j in subset:
-
             current_d = euclidean(i, j)
-
             # print("d between ", i, " and ", j, ": ", current_d)
             if current_d < min_d:
                 min_d = current_d
@@ -35,6 +34,9 @@ def minDistance(P, n):
 
 
 def pointsInRadius(point_array, weight_array, x, x_w, first_circle_squared):
+    # ball-weight ← ∑(x,(1+2α)r) w(y);
+    #               y∈BZ
+    # we used the np array for efficenty reason
     squared_distances = np.sum(np.square(point_array - x), 1)
     indeces = np.where(squared_distances < first_circle_squared)
     return weight_array[indeces].sum() - x_w
@@ -46,6 +48,9 @@ def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
 
     num_iter = 1
     while True:
+        # Z ← P; S ← ∅; WZ = ∑ w(x);
+        #                   x∈P
+        # we used the np array for efficenty reason
         Z_points = np.zeros((len(inputPoints), len(inputPoints[0])))
         Z_weight = np.zeros(len(inputPoints))
         for index in range(len(inputPoints)):
@@ -53,33 +58,45 @@ def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
             Z_weight[index] = weights[index]
         S = []
         W_z = np.sum(weights)
-
-        op = (1 + 2 * alpha) * r
+        # while ((|S| < k) AND (WZ > 0)) do
         while len(S) < k and W_z > 0:
             first_circle_squared = r ** 2
+            #max ←0;
             MAX = -1
             new_center = None
+            # foreach x ∈ P do
             for index in range(len(Z_points)):
-                # ball weight is the sum of weights of all point in the radius (1+2*alpha)r
                 x = Z_points[index]
                 x_w = Z_weight[index]
-                ball_weight = pointsInRadius(Z_points, Z_weight, x, x_w, first_circle_squared)
-                if ball_weight > MAX:
-                    MAX = ball_weight
-                    new_center = x
 
+                ball_weight = pointsInRadius(Z_points, Z_weight, x, x_w, first_circle_squared)
+                # if (ball-weight > max) then
+                if ball_weight > MAX:
+                    # max ← ball-weight
+                    MAX = ball_weight
+                    # newcenter ← x;
+                    new_center = x
+            # S ← S ∪ {newcenter};
             S.append(tuple(new_center))
 
             points_to_maintain = []
+            # foreach (y ∈ BZ (newcenter, (3 + 4α)r )) do
             second_circle_squared = ((3 + 4 * alpha) * r) ** 2
             for indeces in range(len(Z_points)):
-                if np.sum(np.square(Z_points[indeces] - new_center)) < second_circle_squared:
+                # remove y from Z;
+                # subtract w(y) from WZ;
+                if np.sum(np.square(Z_points[indeces] - new_center))  < second_circle_squared:
+                    #perchè non elevi i punti  alla seconda?
                     W_z -= Z_weight[indeces]
                 else:
                     points_to_maintain.append(indeces)
 
             Z_points = Z_points[points_to_maintain]
             Z_weight = Z_weight[points_to_maintain]
+
+        #if (WZ ≤ z) then return S;
+        # else r ← 2r;
+
         if W_z <= z:
             break
         else:
