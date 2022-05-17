@@ -13,6 +13,7 @@ def readVectorsSeq(filename):
 #Fuction of the euclidian distance between two points
 def euclidean(point1, point2):
     res = 0
+
     for i in range(len(point1)):
         diff = (point1[i] - point2[i])
         res += diff * diff
@@ -20,15 +21,16 @@ def euclidean(point1, point2):
 
 # r <- (min distance between fist k+z+1)/2
 def minDistance(P, n):
-    subset = P[:n]
+    subset = np.array(P[:n])
     min_d = math.inf
-    while subset:
-        i = subset.pop()
+    while len(subset):
+        i = subset[0]
+        subset=np.delete(subset,0,0)
         for j in subset:
-            current_d = euclidean(i, j)
+            #current_d = euclidean(i, j)
+            current_d=np.sqrt(np.sum(np.square(i - j)))
 
-            # print("d between ", i, " and ", j, ": ", current_d)
-            if current_d < min_d:
+            if  current_d < min_d:
                 min_d = current_d
     # print(min_d)
     return min_d / 2
@@ -37,7 +39,8 @@ def minDistance(P, n):
 def pointsInRadius(point_array, weight_array, x, x_w, first_circle_squared):
     # ball-weight ← ∑(x,(1+2α)r) w(y);
     #               y∈BZ
-    # we used the np array for efficenty reason
+    # we used the np array for efficient
+
     squared_distances = np.sum(np.square(point_array - x), 1)
     indeces = np.where(squared_distances < first_circle_squared)
     return weight_array[indeces].sum() - x_w
@@ -51,7 +54,7 @@ def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
     while True:
         # Z ← P; S ← ∅; WZ = ∑ w(x);
         #                   x∈P
-        # we used the np array for efficenty reason
+        # we used the np array for efficient
         Z_points = np.zeros((len(inputPoints), len(inputPoints[0])))
         Z_weight = np.zeros(len(inputPoints))
         for index in range(len(inputPoints)):
