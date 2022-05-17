@@ -26,7 +26,7 @@ def minDistance(P, n):
         i = subset.pop()
         for j in subset:
             current_d = euclidean(i, j)
-            #è voluto in questo caso lasciare la distanza euclidea non ottimiizta?
+
             # print("d between ", i, " and ", j, ": ", current_d)
             if current_d < min_d:
                 min_d = current_d
@@ -84,14 +84,14 @@ def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
             # foreach (y ∈ BZ (newcenter, (3 + 4α)r )) do
             second_circle_squared = ((3 + 4 * alpha) * r) ** 2
             for indeces in range(len(Z_points)):
-                # remove y from Z;
-                # subtract w(y) from WZ;
+
+                    #we compare eucludian distance^2 < second_circle^2
                 if np.sum(np.square(Z_points[indeces] - new_center))  < second_circle_squared:
-                    #perchè non elevi i punti  alla seconda?
+                    # subtract w(y) from WZ;
                     W_z -= Z_weight[indeces]
                 else:
                     points_to_maintain.append(indeces)
-
+            # remove y from Z;
             Z_points = Z_points[points_to_maintain]
             Z_weight = Z_weight[points_to_maintain]
 
