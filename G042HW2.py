@@ -26,7 +26,7 @@ def minDistance(P, n):
         i = subset.pop()
         for j in subset:
 
-            current_d = euclidean(i,j)
+            current_d = euclidean(i, j)
 
             # print("d between ", i, " and ", j, ": ", current_d)
             if current_d < min_d:
@@ -35,11 +35,10 @@ def minDistance(P, n):
     return min_d / 2
 
 
-def pointsInRadius(P, w, x, r):
+def pointsInRadius(point_array, weight_array, x, x_w, first_circle_squared):
     # returns set of points in radius r from x
-    dist = r**2
-    indeces = np.where(np.sum(np.square(P-x)) > dist)
-    return w[indeces].sum()
+    indeces = np.where((np.sum(np.square(point_array - x), 1) < first_circle_squared))
+    return weight_array[indeces].sum() - x_w
 
 
 def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
@@ -48,8 +47,9 @@ def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
 
     num_iter = 1
     while True:
+        print("iteration", num_iter)
         print(num_iter)
-        Z_points = np.zeros((len(inputPoints),len(inputPoints[0])))
+        Z_points = np.zeros((len(inputPoints), len(inputPoints[0])))
         Z_weight = np.zeros(len(inputPoints))
         for index in range(len(inputPoints)):
             Z_points[index] = np.asarray(inputPoints[index])
@@ -59,34 +59,36 @@ def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
 
         op = (1 + 2 * alpha) * r
         while len(S) < k and W_z > 0:
-            MAX = 0
-            new_center = tuple()
+            first_circle_squared = r ** 2
+            MAX = -1
+            new_center = None
             for index in range(len(Z_points)):
                 # ball weight is the sum of weights of all point in the radius (1+2*alpha)r
                 x = Z_points[index]
-                ball_weight = pointsInRadius(Z_points, Z_weight, x, op)
+                x_w = Z_weight[index]
+                ball_weight = pointsInRadius(Z_points, Z_weight, x, x_w, first_circle_squared)
                 if ball_weight > MAX:
                     MAX = ball_weight
                     new_center = x
+
             S.append(tuple(new_center))
 
-            points_to_remove = []
-            dist = ((3 + 4 * alpha) * r)**2
-            for index in range(len(Z_points)):
-                if np.sum(np.square(Z_points[index] - new_center)) < dist:
-                    W_z -= Z_weight[index]
-                    points_to_remove.append(index)
+            points_to_maintain = []
+            second_circle_squared = ((3 + 4 * alpha) * r) ** 2
+            for indeces in range(len(Z_points)):
+                if np.sum(np.square(Z_points[indeces] - new_center)) < second_circle_squared:
+                    W_z -= Z_weight[indeces]
+                else:
+                    points_to_maintain.append(indeces)
 
-            np.delete(Z_points,points_to_remove)
-            np.delete(Z_weight,points_to_remove)
+            Z_points = Z_points[points_to_maintain]
+            Z_weight = Z_weight[points_to_maintain]
         if W_z <= z:
             break
         else:
             r = 2 * r
             num_iter += 1
     return S, r, num_iter
-
-
 
 
 def ComputeObjective(P, S, z):
