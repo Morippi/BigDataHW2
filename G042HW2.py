@@ -26,6 +26,7 @@ def minDistance(P, n):
         i = subset.pop()
         for j in subset:
             current_d = euclidean(i, j)
+            #è voluto in questo caso lasciare la distanza euclidea non ottimiizta?
             # print("d between ", i, " and ", j, ": ", current_d)
             if current_d < min_d:
                 min_d = current_d
