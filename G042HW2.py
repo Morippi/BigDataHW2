@@ -10,7 +10,6 @@ def readVectorsSeq(filename):
         result = [tuple(map(float, i.split(','))) for i in f]
     return result
 
-
 def euclidean(point1, point2):
     res = 0
     for i in range(len(point1)):
@@ -36,8 +35,8 @@ def minDistance(P, n):
 
 
 def pointsInRadius(point_array, weight_array, x, x_w, first_circle_squared):
-    # returns set of points in radius r from x
-    indeces = np.where((np.sum(np.square(point_array - x), 1) < first_circle_squared))
+    squared_distances = np.sum(np.square(point_array - x), 1)
+    indeces = np.where(squared_distances < first_circle_squared)
     return weight_array[indeces].sum() - x_w
 
 
@@ -47,8 +46,6 @@ def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
 
     num_iter = 1
     while True:
-        print("iteration", num_iter)
-        print(num_iter)
         Z_points = np.zeros((len(inputPoints), len(inputPoints[0])))
         Z_weight = np.zeros(len(inputPoints))
         for index in range(len(inputPoints)):
