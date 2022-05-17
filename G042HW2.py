@@ -1,8 +1,15 @@
 import sys
-import math
-import copy
 from time import perf_counter
+import math
 import numpy as np
+
+#Fuction that opens the file and put the data in a list of tuple
+def readVectorsSeq2(filename):
+    with open(filename) as f:
+        input = np.empty(len(f))
+        for i in range(f):
+            input[i] = np.asarray(tuple(map(float, i.split(','))))
+    return result
 
 #Fuction that opens the file and put the data in a list of tuple
 def readVectorsSeq(filename):
@@ -12,23 +19,19 @@ def readVectorsSeq(filename):
 
 #Fuction of the euclidian distance between two points
 def euclidean(point1, point2):
-    res = 0
-
-    for i in range(len(point1)):
-        diff = (point1[i] - point2[i])
-        res += diff * diff
-    return math.sqrt(res)
+    dist = [(a - b) ** 2 for a, b in zip(point1, point2)]
+    return math.sqrt(sum(dist))
 
 # r <- (min distance between fist k+z+1)/2
 def minDistance(P, n):
     subset = np.array(P[:n])
-    min_d = math.inf
+    min_d = float('inf')
     while len(subset):
         i = subset[0]
         subset=np.delete(subset,0,0)
         for j in subset:
             #current_d = euclidean(i, j)
-            current_d=np.sqrt(np.sum(np.square(i - j)))
+            current_d = np.sqrt(np.sum(np.square(i - j)))
 
             if  current_d < min_d:
                 min_d = current_d
@@ -36,13 +39,13 @@ def minDistance(P, n):
     return min_d / 2
 
 
-def pointsInRadius(point_array, weight_array, x, x_w, first_circle_squared):
+def weightInRadius(point_array, weight_array, x, x_w, r):
     # ball-weight ← ∑(x,(1+2α)r) w(y);
     #               y∈BZ
     # we used the np array for efficient
 
-    squared_distances = np.sum(np.square(point_array - x), 1)
-    indeces = np.where(squared_distances < first_circle_squared)
+    euclidean_distance = np.square(np.sum(np.square(point_array - x), 1))
+    indeces = np.where(euclidean_distance < r)
     return weight_array[indeces].sum() - x_w
 
 
@@ -54,12 +57,13 @@ def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
     while True:
         # Z ← P; S ← ∅; WZ = ∑ w(x);
         #                   x∈P
-        # we used the np array for efficient
-        Z_points = np.zeros((len(inputPoints), len(inputPoints[0])))
+        # To make the this function more efficient we are going to use Numpy arrays
+        Z = np.zeros((len(inputPoints), len(inputPoints[0])))
         Z_weight = np.zeros(len(inputPoints))
         for index in range(len(inputPoints)):
-            Z_points[index] = np.asarray(inputPoints[index])
+            Z[index] = np.asarray(inputPoints[index])
             Z_weight[index] = weights[index]
+
         S = []
         W_z = np.sum(weights)
         # while ((|S| < k) AND (WZ > 0)) do
@@ -69,11 +73,10 @@ def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
             MAX = -1
             new_center = None
             # foreach x ∈ P do
-            for index in range(len(Z_points)):
-                x = Z_points[index]
+            for index in range(len(Z)):
+                x = Z[index]
                 x_w = Z_weight[index]
-
-                ball_weight = pointsInRadius(Z_points, Z_weight, x, x_w, first_circle_squared)
+                ball_weight = weightInRadius(Z, Z_weight, x, x_w, r)
                 # if (ball-weight > max) then
                 if ball_weight > MAX:
                     # max ← ball-weight
@@ -85,17 +88,16 @@ def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
 
             points_to_maintain = []
             # foreach (y ∈ BZ (newcenter, (3 + 4α)r )) do
-            second_circle_squared = ((3 + 4 * alpha) * r) ** 2
-            for indeces in range(len(Z_points)):
-
-                    #we compare eucludian distance^2 < second_circle^2
-                if np.sum(np.square(Z_points[indeces] - new_center))  < second_circle_squared:
+            for indeces in range(len(Z)):
+                #we compare eucludian distance < second_circle
+                if np.square(np.sum(np.square(Z[indeces] - new_center))) <= ((3 + 4 * alpha) * r) ** 2:
                     # subtract w(y) from WZ;
                     W_z -= Z_weight[indeces]
                 else:
                     points_to_maintain.append(indeces)
-            # remove y from Z;
-            Z_points = Z_points[points_to_maintain]
+
+            # remove points that are not in the bigger circle from Z;
+            Z = Z[points_to_maintain]
             Z_weight = Z_weight[points_to_maintain]
 
         #if (WZ ≤ z) then return S;
@@ -155,7 +157,6 @@ if __name__ == '__main__':
     file_name = sys.argv[1]
     inputPoints = readVectorsSeq(file_name)
     weights = [1 for i in range(len(inputPoints))]
-
     k = sys.argv[2]
     assert k.isdigit(), "k must be an integer"
     k = int(k)
