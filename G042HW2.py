@@ -14,7 +14,9 @@ def euclidean(point1, point2):
     dist = [(a - b) ** 2 for a, b in zip(point1, point2)]
     return math.sqrt(sum(dist))
 
-# r <- (min distance between fist k+z+1)/2
+#PART 1
+#Given a list of point P and a integer n,
+#return the minimum distance between the first n point of P
 def minDistance(P, n):
     subset = np.array(P[:n])
     min_d = float('inf')
@@ -30,7 +32,10 @@ def minDistance(P, n):
     # print(min_d)
     return min_d / 2
 
-
+#given an numpu array of point, a numpy array of the weight of the points
+#a point x (with weight x_w) and a radious op
+#return the weight of the points that are inside the sphere
+#with center x and radious op.
 def weightInRadius(point_array, weight_array, x, x_w, op):
     # we used the np to make this step more efficient
     # we firstly compute the euclidean distances from x to all the point in point_array
@@ -47,7 +52,7 @@ def weightInRadius(point_array, weight_array, x, x_w, op):
 def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
     #we compute the first circle base radious
     r = minDistance(inputPoints, k + z + 1)
-
+    r_init = r;
     num_iter = 1
     while True:
         # To make the this function more efficient we are going to use Numpy arrays
@@ -101,9 +106,10 @@ def SeqWeightedOutliers(inputPoints, weights, k, z, alpha=0):
         else:
             r = 2 * r
             num_iter += 1
-    return S, r, num_iter
 
+    return S, r_init, r, num_iter
 
+#PART 2
 def ComputeObjective(P, S, z):
     # At first we compute for each point the closest center.
     # for each point we save:
@@ -143,7 +149,7 @@ def ComputeObjective(P, S, z):
 
     return objective_value
 
-
+#PART 3
 if __name__ == '__main__':
     assert len(sys.argv) == 4, "Usage: python G042Hw2.py <file_name> <k> <z>"
 
@@ -160,15 +166,14 @@ if __name__ == '__main__':
 
     data = inputPoints[:]
 
-    r_init = minDistance(inputPoints, k + z + 1)
-
     start_time = perf_counter()
 
-    S, r_fin, num_iter = SeqWeightedOutliers(inputPoints, weights, k, z)
+    S, r_init, r_fin, num_iter = SeqWeightedOutliers(inputPoints, weights, k, z)
     end_time = perf_counter()
     time = int((end_time - start_time) * 1000)
 
     objective = ComputeObjective(inputPoints, S, z)
+
     # OUTPUT
     print("Input size n = ", len(inputPoints))
     print("Number of centers k = ", k)
